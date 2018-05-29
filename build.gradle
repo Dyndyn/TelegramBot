@@ -1,0 +1,49 @@
+buildscript {
+	ext {
+		springBootVersion = '2.0.2.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath('org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.6.2')
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.sonarqube'
+
+group = 'com.dyndyn'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-webflux')
+    compile 'org.apache.tinkerpop:gremlin-core:3.3.3'
+	runtime('org.springframework.boot:spring-boot-devtools')
+	runtime('org.postgresql:postgresql')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('io.projectreactor:reactor-test')
+    testCompile 'org.apache.tinkerpop:gremlin-test:3.3.3'
+    testCompile 'org.apache.tinkerpop:tinkergraph-gremlin:3.3.3'
+}
+
+test { ignoreFailures = true }
+
+sonarqube {
+	properties {
+		property "sonar.sourceEncoding", "UTF-8"
+		property "sonar.organization", "crc83-github"
+		property "sonar.host.url", "https://sonarcloud.io"
+		property "sonar.login", "51ccddb2dfeb6b8fb3294789a4e82c428481159d"
+	}
+}
