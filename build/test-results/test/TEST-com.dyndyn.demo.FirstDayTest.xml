@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.dyndyn.demo.FirstDayTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2018-05-30T07:10:56" hostname="roman-K75VM" time="0.243">
+  <properties/>
+  <testcase name="test" classname="com.dyndyn.demo.FirstDayTest" time="0.243"/>
+  <system-out><![CDATA[[]
+[marko, 29]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
