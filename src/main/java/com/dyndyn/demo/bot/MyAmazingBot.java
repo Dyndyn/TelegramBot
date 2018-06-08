@@ -1,80 +1,64 @@
-package com.dyndyn.demo;
+package com.dyndyn.demo.bot;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.google.maps.GeoApiContext;
-import com.google.maps.NearbySearchRequest;
-import com.google.maps.PlaceDetailsRequest;
-import com.google.maps.PlacesApi;
-import com.google.maps.errors.ApiException;
-import com.google.maps.model.LatLng;
-import com.google.maps.model.PlaceDetails;
-import com.google.maps.model.PlaceType;
-import com.google.maps.model.PlacesSearchResponse;
+import com.dyndyn.demo.service.PlacesService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
+import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
 public class MyAmazingBot extends TelegramLongPollingBot {
+    private static final Logger logger = LoggerFactory.getLogger(TelegramLongPollingBot.class);
 
-    List<String> callbackNames = new ArrayList<>();
-    List<String> places = new ArrayList<>();
+    private List<String> callbackNames = new ArrayList<>();
+    private List<String> places = new ArrayList<>();
+    private PlacesService placesService;
 
-    public MyAmazingBot() {
+    @Autowired
+    public MyAmazingBot(PlacesService placesService) {
         super();
-        places.add("Bar");
-        places.add("Food");
-        places.add("cafe");
+        this.placesService = placesService;
+        places.add("Location");
     }
 
     @Override
     public void onUpdateReceived(Update update) {
-        System.out.println(update.getMessage().getText());
-
-        if (update.getMessage().hasLocation()){
-
-            GeoApiContext context = new GeoApiContext.Builder()
-                    .apiKey("AIzaSyCPlZw3JX2Uvgc5MZ_zDaewp0YdjRUO6TU")
-                    .build();
-
-            LatLng location = new LatLng(update.getMessage().getLocation().getLatitude(),
-                    update.getMessage().getLocation().getLongitude());
-
-            PlacesSearchResponse response = null;
-            try {
-                response = PlacesApi.nearbySearchQuery(context, location).radius(2000).await();
-            } catch (ApiException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
+        if (update.hasCallbackQuery()) {
+            String results = placesService.getPlaces(update);
             SendMessage message = new SendMessage() // Create a message object object
-                    .setChatId(update.getMessage().getChatId())
-                    .setText(Arrays.stream(response.results).map(item -> item.name + " -> " + Arrays.toString(item.types))
-                            .collect(Collectors.joining("\n")));
+                    .setChatId(update.getCallbackQuery().getMessage().getChatId())
+                    .setText(results == null || results.isEmpty() ? "No Results" : results);
 
             try {
                 execute(message); // Sending our message object to user
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
-        }
-        else {
+        } else if (update.getMessage().hasLocation()) {
             SendMessage message = new SendMessage() // Create a message object object
-                    .setChatId(update.getMessage().getChatId()).setText("test")
+                    .setChatId(update.getMessage().getChatId()).setText("Choose Type")
+                    .setReplyMarkup(getInlineKeyboardMarkup(placesService.getTypes(update)));
+
+            try {
+                execute(message); // Sending our message object to user
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        } else {
+            SendMessage message = new SendMessage() // Create a message object object
+                    .setChatId(update.getMessage().getChatId()).setText(update.getMessage().getText())
                     .setReplyMarkup(getReplyKeyboardMarkup(places));
 
             try {
@@ -125,5 +109,31 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setKeyboard(rowsInline);
         replyKeyboardMarkup.setResizeKeyboard(true);
         return replyKeyboardMarkup;
+    }
+
+    private InlineKeyboardMarkup getInlineKeyboardMarkup(List<String> buttons) {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+        int columnCounter = 1;
+        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+        for (int i = 0; i < buttons.size(); i++) {
+
+            rowInline.add(new InlineKeyboardButton().setText(buttons.get(i)).setCallbackData(buttons.get(i)));
+            callbackNames.add(buttons.get(i));
+
+            if (columnCounter == 2 || i == buttons.size() - 1) {
+                rowsInline.add(rowInline);
+            }
+            if (columnCounter < 2) {
+                columnCounter++;
+            } else {
+                columnCounter = 1;
+                rowInline = new ArrayList<>();
+            }
+        }
+
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
     }
 }

@@ -12,7 +12,6 @@ buildscript {
 }
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
@@ -28,8 +27,13 @@ repositories {
 
 
 dependencies {
-	compile('org.springframework.boot:spring-boot-starter-webflux')
+	compile('org.springframework.boot:spring-boot-starter')
     compile 'org.apache.tinkerpop:gremlin-core:3.3.3'
+    compile 'org.apache.tinkerpop:gremlin-driver:3.3.3'
+	compile 'org.telegram:telegrambots:3.6'
+    compile 'com.google.maps:google-maps-services:0.2.7'
+    compile 'org.umlg:sqlg-postgres:1.5.1'
+	compile 'com.mchange:c3p0:0.9.5.2'
 	runtime('org.springframework.boot:spring-boot-devtools')
 	runtime('org.postgresql:postgresql')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
@@ -43,8 +47,8 @@ test { ignoreFailures = true }
 sonarqube {
 	properties {
 		property "sonar.sourceEncoding", "UTF-8"
-		property "sonar.organization", "crc83-github"
+		property "sonar.organization", "dyndyn-github"
 		property "sonar.host.url", "https://sonarcloud.io"
-		property "sonar.login", "51ccddb2dfeb6b8fb3294789a4e82c428481159d"
+		property "sonar.login", "cab8c83a1fa59f3fe0d075db3379e85ad6ed87d8"
 	}
 }

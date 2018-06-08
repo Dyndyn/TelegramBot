@@ -1,7 +1,12 @@
 package com.dyndyn.demo.repository;
 
-/**
- * Created by roman on 07.06.18.
- */
+
+import com.dyndyn.demo.model.User;
+
 public interface UserRepository {
+
+    User getByChatId(Long chatId);
+    void update(User user);
+    void insert(User user);
+
 }

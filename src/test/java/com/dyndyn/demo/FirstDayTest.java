@@ -8,6 +8,8 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import org.junit.Test;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
+import java.util.Date;
+
 /**
  * Created by roman on 29.05.18.
  */
@@ -24,9 +26,12 @@ public class FirstDayTest {
                 .property("age", 29).next();
         Vertex v2 = g.addV("software").property(T.id, 11).property("name", "lop")
                 .property("lang", "java").next();
-        g.addE("created").from(v1).to(v2).property(T.id, 9).property("weight", 0.4);
+//        g.addE("created").from(v1).to(v2).property(T.id, 9).property("weight", 0.4);
 
-        System.out.println(g.V(10).values().toList());
+        String location = "location";
+        g.addV("User").property(T.id, 100).property(location, new Date()).next();
+//        Vertex v1 = g.V(1).next();
+        System.out.println(g.V(100).values(location).toList());
 
     }
 
