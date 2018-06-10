@@ -4,6 +4,7 @@ import com.dyndyn.demo.service.PlacesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
@@ -15,12 +16,16 @@ import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class MyAmazingBot extends TelegramLongPollingBot {
     private static final Logger logger = LoggerFactory.getLogger(TelegramLongPollingBot.class);
+
+    @Resource
+    private Environment environment;
 
     private List<String> callbackNames = new ArrayList<>();
     private List<String> places = new ArrayList<>();
@@ -74,13 +79,13 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     public String getBotUsername() {
         // Return bot username
         // If bot username is @bot.MyAmazingBot, it must return 'bot.MyAmazingBot'
-        return "Dyndyn Demo Bot ";
+        return environment.getProperty("telegram.bot.name");
     }
 
     @Override
     public String getBotToken() {
         // Return bot token from BotFather
-        return "615818484:AAHKHnxzq7DBzsM_KaSP_lSsVPxIbGQLdoY";
+        return environment.getProperty("telegram.token");
     }
 
     private ReplyKeyboardMarkup getReplyKeyboardMarkup(List<String> buttons) {

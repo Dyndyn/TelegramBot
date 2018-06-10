@@ -1,6 +1,7 @@
 package com.dyndyn.demo.service;
 
 import com.dyndyn.demo.model.User;
+import com.dyndyn.demo.model.UserBuilder;
 import com.dyndyn.demo.repository.UserRepository;
 import com.google.maps.GeoApiContext;
 import com.google.maps.NearbySearchRequest;
@@ -36,7 +37,6 @@ public class PlacesService {
     private UserService userService;
     private int radius = 100;
     private int delay = 2000;
-    private Map<Long, LatLng> users = new HashMap<>();
 
     @Autowired
     public PlacesService(GeoApiContext context, UserService userService) {
@@ -49,17 +49,16 @@ public class PlacesService {
         LatLng latLng = new LatLng(update.getMessage().getLocation().getLatitude(),
                 update.getMessage().getLocation().getLongitude());
 
-//        users.put(update.getMessage().getChatId(), latLng);
-        User user = new User();
-        user.setChatId(update.getMessage().getChatId());
-        user.setLatLng(latLng);
+        List<String> placeTypes = Arrays.stream(PlaceType.values()).map(PlaceType::toString).collect(Collectors.toList());
+        List<PlacesSearchResult> places = getResults(PlacesApi.nearbySearchQuery(context, latLng)
+                .radius(radius));
+        User user = new UserBuilder().setChatId(update.getMessage().getChatId())
+                .setLoction(latLng).setPlaces(places).build();
 
         userService.addOrUpdate(user);
 
-        List<String> placeTypes = Arrays.stream(PlaceType.values()).map(PlaceType::toString).collect(Collectors.toList());
         logger.info("types {}", placeTypes);
-        return getResults(PlacesApi.nearbySearchQuery(context, latLng)
-                .radius(radius)).stream()
+        return places.stream()
                 .flatMap(item -> Arrays.stream(item.types)).distinct()
                 .filter(placeTypes::contains).collect(Collectors.toList());
 
@@ -69,10 +68,11 @@ public class PlacesService {
         User user = userService.getByChatId(update.getCallbackQuery().getMessage().getChatId());
         LatLng latLng = user.getLatLng();
 
-
         PlaceType type = PlaceType.valueOf(update.getCallbackQuery().getData().toUpperCase());
-        return getResults(PlacesApi.nearbySearchQuery(context, latLng).radius(radius)
-                .type(type)).stream().filter(item -> Arrays.stream(item.types)
+
+        List<PlacesSearchResult> places = getResults(PlacesApi.nearbySearchQuery(context, latLng)
+                .radius(radius).type(type));
+        return places.stream().filter(item -> Arrays.stream(item.types)
                 .anyMatch(i -> i.equals(type.toUrlValue())))
                 .map(this::formatPlace)
                 .collect(Collectors.joining("\n"));

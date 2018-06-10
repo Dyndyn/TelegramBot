@@ -25,10 +25,13 @@ public class UserService {
     }
 
     public void addOrUpdate(User user){
-        if (userRepository.getByChatId(user.getChatId()) == null){
+        User dbUser = userRepository.getByChatId(user.getChatId());
+        if (dbUser == null){
             userRepository.insert(user);
         } else {
-            userRepository.update(user);
+            dbUser.setLatLng(user.getLatLng());
+            dbUser.setLastPlaces(user.getLastPlaces());
+            userRepository.update(dbUser);
         }
     }
 
