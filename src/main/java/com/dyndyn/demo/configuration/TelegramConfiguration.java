@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
 
 import javax.annotation.PostConstruct;
 
@@ -24,14 +25,9 @@ public class TelegramConfiguration {
     }
 
     @PostConstruct
-    public void start(){
+    public void start() throws TelegramApiRequestException {
         TelegramBotsApi botsApi = new TelegramBotsApi();
-
-        try {
-            botsApi.registerBot(myAmazingBot);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+        botsApi.registerBot(myAmazingBot);
     }
 
 }

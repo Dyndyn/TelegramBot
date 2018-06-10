@@ -10,7 +10,6 @@ public class DataSourceConfiguration {
 
     @Bean
     public Graph getGraphTraversalSource(){
-        Graph graph = SqlgGraph.open("postgres.properties");
-        return graph;
+        return SqlgGraph.open("postgres.properties");
     }
 }

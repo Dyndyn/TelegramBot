@@ -20,7 +20,7 @@ public class UserService {
 
     public User getByChatId(Long chatId){
         User user = userRepository.getByChatId(chatId);
-        logger.info("User {}", user);
+        logger.info("User with chat id {} has been found", user.getChatId());
         return user;
     }
 
@@ -28,10 +28,12 @@ public class UserService {
         User dbUser = userRepository.getByChatId(user.getChatId());
         if (dbUser == null){
             userRepository.insert(user);
+            logger.info("User with chat id {} has been added", user.getChatId());
         } else {
             dbUser.setLatLng(user.getLatLng());
             dbUser.setLastPlaces(user.getLastPlaces());
             userRepository.update(dbUser);
+            logger.info("User with chat id {} has been updated", user.getChatId());
         }
     }
 

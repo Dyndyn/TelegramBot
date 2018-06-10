@@ -40,6 +40,7 @@ dependencies {
 	testCompile('io.projectreactor:reactor-test')
     testCompile 'org.apache.tinkerpop:gremlin-test:3.3.3'
     testCompile 'org.apache.tinkerpop:tinkergraph-gremlin:3.3.3'
+    testCompile 'org.mockito:mockito-core:2.18.3'
 }
 
 test { ignoreFailures = true }

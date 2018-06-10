@@ -2,7 +2,6 @@ package com.dyndyn.demo.service;
 
 import com.dyndyn.demo.model.User;
 import com.dyndyn.demo.model.UserBuilder;
-import com.dyndyn.demo.repository.UserRepository;
 import com.google.maps.GeoApiContext;
 import com.google.maps.NearbySearchRequest;
 import com.google.maps.PlacesApi;
@@ -20,22 +19,17 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.dyndyn.demo.repository.impl.TinkerPopUserRepositoryImpl;
 
 @Service
 public class PlacesService {
 
     private static final Logger logger = LoggerFactory.getLogger(PlacesService.class);
-    private static String location = "location";
 
     private GeoApiContext context;
     private UserService userService;
-    private int radius = 100;
+    private int radius = 200;
     private int delay = 2000;
 
     @Autowired
@@ -44,35 +38,26 @@ public class PlacesService {
         this.userService = userService;
     }
 
-    public List<String> getTypes(Update update) {
-
-        LatLng latLng = new LatLng(update.getMessage().getLocation().getLatitude(),
-                update.getMessage().getLocation().getLongitude());
-
+    public List<String> getTypes(LatLng latLng, Long chatId) {
         List<String> placeTypes = Arrays.stream(PlaceType.values()).map(PlaceType::toString).collect(Collectors.toList());
         List<PlacesSearchResult> places = getResults(PlacesApi.nearbySearchQuery(context, latLng)
                 .radius(radius));
-        User user = new UserBuilder().setChatId(update.getMessage().getChatId())
+
+        User user = new UserBuilder().setChatId(chatId)
                 .setLoction(latLng).setPlaces(places).build();
 
         userService.addOrUpdate(user);
-
-        logger.info("types {}", placeTypes);
         return places.stream()
                 .flatMap(item -> Arrays.stream(item.types)).distinct()
                 .filter(placeTypes::contains).collect(Collectors.toList());
 
     }
 
-    public String getPlaces(Update update) {
-        User user = userService.getByChatId(update.getCallbackQuery().getMessage().getChatId());
-        LatLng latLng = user.getLatLng();
+    public String getPlaces(String placeType, Long chatId) {
+        User user = userService.getByChatId(chatId);
+        PlaceType type = PlaceType.valueOf(placeType.toUpperCase());
 
-        PlaceType type = PlaceType.valueOf(update.getCallbackQuery().getData().toUpperCase());
-
-        List<PlacesSearchResult> places = getResults(PlacesApi.nearbySearchQuery(context, latLng)
-                .radius(radius).type(type));
-        return places.stream().filter(item -> Arrays.stream(item.types)
+        return user.getLastPlaces().stream().filter(item -> Arrays.stream(item.types)
                 .anyMatch(i -> i.equals(type.toUrlValue())))
                 .map(this::formatPlace)
                 .collect(Collectors.joining("\n"));
@@ -86,6 +71,7 @@ public class PlacesService {
                 sb.append(": ")
                         .append(place.openingHours.weekdayText[LocalDate.now().getDayOfWeek().ordinal()]);
             }
+            sb.append("\n");
         }
 
         return sb.append("Рейтинг: ").append(place.rating).append(" / 10\n").toString();
@@ -97,37 +83,21 @@ public class PlacesService {
         List<PlacesSearchResult> results = new ArrayList<>();
         response = request.awaitIgnoreError();
         Collections.addAll(results, response.results);
-        while (response.nextPageToken != null) {
-            try {
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
 
-            response = PlacesApi.nearbySearchNextPage(context, response.nextPageToken).awaitIgnoreError();
-            Collections.addAll(results, response.results);
+        if (results.size() == 20) {
+            while (response.nextPageToken != null) {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    logger.error(e.toString());
+                }
+
+                response = PlacesApi.nearbySearchNextPage(context, response.nextPageToken).awaitIgnoreError();
+                Collections.addAll(results, response.results);
+            }
         }
-        logger.info("{} places are found", results.size());
+        logger.info("{} places have been found", results.size());
 
         return results;
-    }
-
-
-    private String toStringPlace(PlacesSearchResult place) {
-        final StringBuilder sb = new StringBuilder("Place{");
-        sb.append("formattedAddress='").append(place.formattedAddress).append('\'');
-        sb.append(", geometry=").append(place.geometry);
-        sb.append(", name='").append(place.name).append('\'');
-        sb.append(", icon=").append(place.icon);
-        sb.append(", placeId='").append(place.placeId).append('\'');
-        sb.append(", scope=").append(place.scope);
-        sb.append(", rating=").append(place.rating);
-        sb.append(", types=").append(Arrays.toString(place.types));
-        sb.append(", openingHours=").append(place.openingHours);
-        sb.append(", photos=").append(Arrays.toString(place.photos));
-        sb.append(", vicinity='").append(place.vicinity).append('\'');
-        sb.append(", permanentlyClosed=").append(place.permanentlyClosed);
-        sb.append('}');
-        return sb.toString();
     }
 }
