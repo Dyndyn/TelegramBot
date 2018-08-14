@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.dyndyn.demo.bot.MyAmazingBotTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2018-06-10T18:57:07" hostname="roman-K75VM" time="0.061">
-  <properties/>
-  <testcase name="testOnUpdateReceived_shouldSendPlaces" classname="com.dyndyn.demo.bot.MyAmazingBotTest" time="0.061"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
